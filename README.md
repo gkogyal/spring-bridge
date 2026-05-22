@@ -30,6 +30,6 @@ The users inputs will impact the main visual, but also other tracked data:
 
 .
 ├── README.md
-├── main.py			# 
-├── plank.py 		# 
-└── spring.py 		# 
+├── main.py			# main file; loops through objects
+├── plank.py 		# plank object
+└── spring.py 		# spring object
