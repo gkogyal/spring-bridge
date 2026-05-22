@@ -28,8 +28,10 @@ The users inputs will impact the main visual, but also other tracked data:
 
 ## Repository Structure
 
+```bash
 .
 ├── README.md
 ├── main.py			# main file; loops through objects
 ├── plank.py 		# plank object
 └── spring.py 		# spring object
+```
