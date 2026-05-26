@@ -3,7 +3,6 @@ warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 from vpython import canvas, rate, vec, color, box, textures, arrow, points
 
 scene = canvas()
-
 scene.userzoom = False
 scene.width = 1500
 scene.background = color.white
