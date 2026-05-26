@@ -23,8 +23,6 @@ class Plank:
             color=vec(0.5, 0.25, 0)
         )
         
-class Spring:
-    
 
 box(pos=vec(0, 0, 0), radius=0.5,texture=textures.wood)
 
