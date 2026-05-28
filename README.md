@@ -23,15 +23,3 @@ The users inputs will impact the main visual, but also other tracked data:
 2. Tension/Resistive force on the different springs of the bridge
 3. Energy graph that plots kinetic + potential energy
 4. Red-blue gradient overlay on each plank which changes based on force
-
----
-
-## Repository Structure
-
-```bash
-.
-├── README.md
-├── main.py			# main file; loops through objects
-├── plank.py 		# plank object
-└── spring.py 		# spring object
-```
