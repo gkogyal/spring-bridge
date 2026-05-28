@@ -119,11 +119,15 @@ for i in range(num_LL):
 t=0
 while True: 
     rate(30)
-    t+=0.01
-    for i in range( 0, len(LLs) ):
-        LL = LLs[i]
-        angle = t + (2 * pi * i / len(LLs))
-        
-        LL.pos = vec(r_LL*cos(angle),r_LL*sin(2*t+i*pi), r_LL*sin(angle))
-        LL.color = vec(random(), random(), random())
+    dt = 0.01 
+    g = vec(0, -9.8, 0)
 
+    for p in plank_list:
+        if not p.anchored:
+            p.net_force += p.mass * g 
+            
+            acceleration = p.net_force / p.mass
+            p.velocity += acceleration * dt
+            p.model.pos += p.velocity * dt      
+        p.net_force = vec(0,0,0)
+    print(plank_list[5].model.pos)
