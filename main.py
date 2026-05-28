@@ -5,22 +5,6 @@ from vpython import *
 # Web VPython 3.2
 
 #########################
-# NO-LIB HELPER FUNCTIONS
-#########################
-v=3
-def rand():
-    global v
-    v = (1103515245 * v + 12345) % (2**31)
-    return v/(2**31)
-
-pi=3.141592
-def sin(x):
-    x = ((x + pi) % (2*pi)) - pi
-    return x - (x**3)/6 + (x**5)/120
-def cos(x):
-    return sin(x + pi/2)
-
-#########################
 # SCENE SETUP
 #########################
 scene.userzoom = False
@@ -55,12 +39,41 @@ class Plank:
             color=vec(0.5, 0.25, 0)
         )
 
-p1 = Plank(start_pos=vec(0,0,0), mass=3.0)
-plank_list.append(p1)
-
 class Spring:
-    def __init__(self, k):
+    def __init__(self, k, plankL, plankR):
         self.k = k
+        self.plank_A = plankL
+        self.plank_B = plankR
+        
+        self.rest_length = mag(plankL.model.pos - plankR.model.pos)
+        
+        self.model = helix(
+            pos=plankL.model.pos, 
+            axis=(plankR.model.pos - plankL.model.pos), 
+            radius=1.5, coils=8, thickness=0.3, color=color.gray(0.6)
+        )
+
+plank_list = []
+spring_list = []
+
+num_planks = 12
+gap = 8.0 
+start_x = -44
+
+for i in range(num_planks):
+    spawn_pos = vec(start_x + (i * gap), 0, 0)
+    p = Plank(start_pos=spawn_pos, mass=5.0)
+    
+    if i == 0 or i == num_planks - 1:
+        p.anchored = True
+    else:
+        p.anchored = False
+        
+    plank_list.append(p)
+
+for i in range(num_planks - 1):
+    s = Spring(k=200, plankL=plank_list[i], plankR=plank_list[i+1])
+    spring_list.append(s)
 
 # visible axes
 arrow(pos=vec(0, 0, 0), axis=vec(50, 0, 0), color=color.orange, shaftwidth=0.3)
@@ -94,7 +107,7 @@ LLs = []
 
 for i in range(num_LL):
     angle = 2*pi*i/num_LL
-    LL = local_light(pos=vec(r_LL*cos(angle), 0, r_LL*sin(angle)), color=vec(rand(), rand(), rand()))
+    LL = local_light(pos=vec(r_LL*cos(angle), 0, r_LL*sin(angle)), color=vec(random(), random(), random()))
     LLs.append(LL)
     
 #scene = canvas(width=800, height=600, background=color.black)
@@ -104,7 +117,7 @@ for i in range(num_LL):
 # MAIN LOOP
 #########################
 t=0
-while True:
+while True: 
     rate(30)
     t+=0.01
     for i in range( 0, len(LLs) ):
@@ -112,5 +125,5 @@ while True:
         angle = t + (2 * pi * i / len(LLs))
         
         LL.pos = vec(r_LL*cos(angle),r_LL*sin(2*t+i*pi), r_LL*sin(angle))
-        LL.color = vec(rand(), rand(), rand())
+        LL.color = vec(random(), random(), random())
 
