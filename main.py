@@ -94,6 +94,8 @@ for i in range(num_LL):
     LL = local_light(pos=vec(r_LL*cos(angle), 0, r_LL*sin(angle)), color=vec(rand(), rand(), rand()))
     LLs.append(LL)
     
+#scene = canvas(width=800, height=600, background=color.black)
+#floor = box(pos=vec(0, -5, 0), size=vec(15, 0.1, 10), color=color.white, opacity=1)
 
 #########################
 # MAIN LOOP
