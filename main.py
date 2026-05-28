@@ -78,8 +78,11 @@ for a,b in edges:
     curve(pos=[corners[a], corners[b]], color=color.black, radius=0.2)
 
 # walls
-box(pos=vec(-50, -25, 0), length=5, height=50, width=100)
-box(pos=vec(50, -25, 0), length=5, height=50, width=100)
+box(pos=vec(-50, -25, 0), length=5, height=50, width=100, color=color.black)
+box(pos=vec(50, -25, 0), length=5, height=50, width=100, color=color.black)
+
+# floor
+box(pos=vec(0, -50, 0), length=100, height=5, width=100, color=color.black)
 
 #########################
 # LIGHT SETUP
@@ -108,6 +111,6 @@ while True:
         LL = LLs[i]
         angle = t + (2 * pi * i / len(LLs))
         
-        LL.pos = vec(r_LL*cos(angle),r_LL*sin(2*t+i/pi), r_LL*sin(angle))
+        LL.pos = vec(r_LL*cos(angle),r_LL*sin(2*t+i*pi), r_LL*sin(angle))
         LL.color = vec(rand(), rand(), rand())
 
