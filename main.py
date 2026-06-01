@@ -1,4 +1,8 @@
-Web VPython 3.2
+import warnings
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
+from vpython import *
+
+#Web VPython 3.2
     
 #########################
 # CONSTANTS
@@ -68,7 +72,7 @@ class Person:
         
         self.model = box(
             texture = textures.wood,
-            pos = this.pos,
+            pos = self.pos,
             size = PPL_DIM,
             color = vec(0,0,0)
         )
@@ -94,7 +98,7 @@ class Plank:
 
         self.model = box(
             texture=textures.wood,
-            pos=this.pos,
+            pos=self.pos,
             size=vec(length, height, width),
             color=vec(0.5, 0.25, 0)
         )
@@ -118,10 +122,10 @@ spring_list = []
 
 
 class Spring:
-    def __init__(self, k, plankL, plankR, plankL, plankR):
+    def __init__(self, k, plankL, plankR):
         self.k = k
-        self.plankL = plankL
-        self.plankR = plankR
+        self.plank_A = plankL
+        self.plank_B = plankR
         
         self.rest_length = mag(plankL.model.pos - plankR.model.pos)
         
@@ -134,18 +138,6 @@ class Spring:
 for i in range(PLA_NUM-1):
     s = Spring(k=200, plankL = plank_list[i], plankR = plank_list[i+1])
     spring_list.append(s)
-
-    
-        self.plank_A = plankL
-        self.plank_B = plankR
-        
-        self.rest_length = mag(plankL.model.pos - plankR.model.pos)
-        
-        self.model = helix(
-            pos=plankL.model.pos, 
-            axis=(plankR.model.pos - plankL.model.pos), 
-            radius=1.5, coils=8, thickness=0.3, color=color.gray(0.6)
-        )
 
 plank_list = []
 spring_list = []
@@ -224,33 +216,43 @@ for i in range(num_LL):
 
 #########################
 # MAIN LOOP
-#########################
-t=0
-dt=0.01
+#########################|
+t = 0
+dt = 0.01
+g = vec(0, -9.8, 0)
+b = 1.0 
+
 while True:
-while True: 
     rate(30)
     t+=dt
-    g = vec(0, -9.8, 0)
+    for s in spring_list:
+        spring_vec = s.plank_B.model.pos - s.plank_A.model.pos
+        current_length = mag(spring_vec)
+        
+        if current_length > 0: 
+            spring_dir = norm(spring_vec) 
+        else:
+            spring_dir = vec(0,0,0)
+
+        stretch = current_length - s.rest_length
+        tension_mag = s.k * stretch
+
+        force_on_A = tension_mag * spring_dir
+        force_on_B = -tension_mag * spring_dir
+
+        s.plank_A.net_force += force_on_A
+        s.plank_B.net_force += force_on_B
+        
+        s.model.pos = s.plank_A.model.pos
+        s.model.axis = spring_vec
 
     for p in plank_list:
         if not p.anchored:
             p.net_force += p.mass * g 
-            
+            p.net_force -= b * p.velocity
             acceleration = p.net_force / p.mass
             p.velocity += acceleration * dt
             p.model.pos += p.velocity * dt      
         p.net_force = vec(0,0,0)
-    print(plank_list[5].model.pos)
-    dt = 0.01 
-    g = vec(0, -9.8, 0)
-
-    for p in plank_list:
-        if not p.anchored:
-            p.net_force += p.mass * g 
-            
-            acceleration = p.net_force / p.mass
-            p.velocity += acceleration * dt
-            p.model.pos += p.velocity * dt      
-        p.net_force = vec(0,0,0)
+        
     print(plank_list[5].model.pos)
