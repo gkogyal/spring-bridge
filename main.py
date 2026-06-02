@@ -14,29 +14,32 @@ STL_MAT = 0 # steel
 ALM_MAT = 1 # aluminum
 BRZ_MATERIAL = 2 # bronze
 
-PLA_WIDTH = 10
+PLA_WIDTH = 5
 
 WALL_WIDTH = 5
 
 #########################
 # INPUTS
 #########################
-PPL_NUM = 10
+
+PPL_NUM = 3
 PPL_MASS = 5 # kg
 PPL_SPEED = 10 # m/s
 
-PLA_NUM = 12
+PLA_NUM = 30
 
-K_SPR = 50 # N/m
-NUM_SPR = 3 # N/m
+SPR_K = 50 # N/m
+SPR_NUM = 1 # in parallel between each
 SPR_TYPE = 0 # defaults to torsion type
 SPR_MAT = 0 # defaults to aluminum
+SPR_B = 10 # dampening constant
 
 extra_visuals = True
 
 #########################
 # SCENE SETUP
 #########################
+
 scene.userzoom = False
 scene.resizable = False
 scene.width = 1000
@@ -54,7 +57,7 @@ scene2.visible = True
 
 BRIDGE_LEN = PLA_WIDTH*PLA_NUM
 WALL_L = box(pos=vec(-BRIDGE_LEN/2 -WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50+10, 100)) # people start from here
-WALL_R = box(pos=vec(BRIDGE_LEN/2, -25, 0), size=vec(WALL_WIDTH, 50+10, 100)) # +10 is to fill edge due to floor's size.y
+WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50+10, 100)) # +10 is to fill edge due to floor's size.y
 FLOOR = box(pos=vec(0, -50, 0), size=vec(BRIDGE_LEN, 10, 100))
 
 #########################
@@ -68,7 +71,7 @@ class Person:
     def __init__(self, start_pos, mass, vel):
         self.pos = start_pos
         self.mass = mass
-        self.vel = vel
+        self.vel = vec(vel,0,0)
         
         self.model = box(
             texture = textures.wood,
@@ -77,10 +80,20 @@ class Person:
             color = vec(0,0,0)
         )
         
-for i in range(PPL_NUM):
-    init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y, 0)
-    ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
-    person_list.append(ppl)
+def init_people():
+    global person_list
+    
+    first_init = len(person_list)==0
+    
+    for i in range(PPL_NUM):
+        init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y, 0)
+        if first_init:
+            ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
+            person_list.append(ppl)
+        else:
+            person_list[i].pos = init_pos
+            person_list[i].model.pos = init_pos
+            person_list[i].model.visible = True
     
 
 #########################
@@ -102,17 +115,30 @@ class Plank:
             size=vec(length, height, width),
             color=vec(0.5, 0.25, 0)
         )
-        
-for i in range(PLA_NUM):
-    init_pos = vec(5-BRIDGE_LEN/2 + (i*PLA_WIDTH), 0, 0)
-    pla = Plank(start_pos=init_pos, mass=5.0)
+
+def init_planks():
+    global plank_list
     
-    if i==0 or i==PLA_NUM-1:
-        pla.anchored = True
-    else:
-        pla.anchored = False
-        
-    plank_list.append(pla)
+    first_init = len(plank_list)==0
+    
+    for i in range(PLA_NUM):
+        init_pos = vec(5-BRIDGE_LEN/2 + (i*PLA_WIDTH), 0, 0)
+        if first_init:
+            pla = Plank(start_pos=init_pos, mass=5.0)
+            
+            if i==0 or i==PLA_NUM-1:
+                pla.anchored = True
+            else:
+                pla.anchored = False
+                
+            plank_list.append(pla)
+        else:
+            plank_list[i].model.pos = init_pos
+            plank_list[i].pos = init_pos
+            plank_list[i].velocity = vec(0,0,0)
+            plank_list[i].acceleration = vec(0,0,0)
+
+            plank_list[i].model.visible = True
         
 #########################
 # INIT SPRINGS
@@ -120,12 +146,11 @@ for i in range(PLA_NUM):
 
 spring_list = []
 
-
 class Spring:
     def __init__(self, k, plankL, plankR):
         self.k = k
-        self.plank_A = plankL
-        self.plank_B = plankR
+        self.plankL = plankL
+        self.plankR = plankR
         
         self.rest_length = mag(plankL.model.pos - plankR.model.pos)
         
@@ -135,37 +160,21 @@ class Spring:
             radius = 0.5, coils = 8, thickness=0.3, color=color.gray(0.6)
         )
 
-spring_list = []
-
-gap = 8.0 
-start_x = -44
-
-for i in range(PLA_NUM - 1):
-    s = Spring(k=200, plankL=plank_list[i], plankR=plank_list[i+1])
-    spring_list.append(s)
-
-# visible axes
-arrow(pos=vec(0, 0, 0), axis=vec(50, 0, 0), color=color.orange, shaftwidth=0.3)
-arrow(pos=vec(0, 0, 0), axis=vec(0, 50, 0), color=color.cyan, shaftwidth=0.3)
-arrow(pos=vec(0, 0, 0), axis=vec(0, 0, 50), color=color.white, shaftwidth=0.3)
-
-# visible corners of area used
-corners = [vec(50,50,50), vec(-50,50,50), vec(50,-50,50), vec(50,50,-50), 
-            vec(-50,-50,-50), vec(-50,-50,50), vec(50,-50,-50), vec(-50,50,-50)]
+def init_springs():
+    global spring_list
     
-
-edges = [(0,1),(0,2),(0,3), (1,5),(1,7),(7,3), (4,5),(4,6),(4,7), (5,1),(5,2),(6,3), (2,6)]
-
-for a,b in edges:
-    curve(pos=[corners[a], corners[b]], color=color.black, radius=0.2)
-
-# walls
-box(pos=vec(-50, -25, 0), length=5, height=50, width=100, color=color.black)
-box(pos=vec(50, -25, 0), length=5, height=50, width=100, color=color.black)
-
-# floor
-box(pos=vec(0, -50, 0), length=100, height=5, width=100, color=color.black)
-
+    first_init = len(spring_list)==0
+    
+    for i in range(PLA_NUM-1):
+        if first_init:
+            s = Spring(k=200, plankL = plank_list[i], plankR = plank_list[i+1])
+            spring_list.append(s)
+        else:
+            spring_list[i].model.pos = spring_list[i].plankL.model.pos
+            spring_list[i].model.axis = spring_list[i].plankR.model.pos - spring_list[i].plankL.model.pos
+            spring_list[i].rest_length = mag(spring_list[i].plankR.model.pos - spring_list[i].plankL.model.pos)
+            spring_list[i].model.visible = True
+    
 #########################
 # EXTRANEOUS VISUALS
 #########################
@@ -173,7 +182,7 @@ box(pos=vec(0, -50, 0), length=100, height=5, width=100, color=color.black)
 # outline
 if (extra_visuals):
     
-    outline_w,outline_h,outline_d = BRIDGE_LEN/2, 50, 50
+    outline_w,outline_h,outline_d = BRIDGE_LEN/2, 45, 50
     
     for s1 in (-1, 1):
         for s2 in (-1, 1):
@@ -185,31 +194,67 @@ if (extra_visuals):
     arrow(pos=vec(0, 0, 0), axis=vec(30, 0, 0), color=color.orange, shaftwidth=1.0)
     arrow(pos=vec(0, 0, 0), axis=vec(0, 30, 0), color=color.cyan, shaftwidth=1.0)
     arrow(pos=vec(0, 0, 0), axis=vec(0, 0, 30), color=color.white, shaftwidth=1.0)
-num_LL = 8
-r_LL = 33
-LLs = []
-
-for i in range(num_LL):
-    angle = 2*pi*i/num_LL
-    LL = local_light(pos=vec(r_LL*cos(angle), 0, r_LL*sin(angle)), color=vec(random(), random(), random()))
-    LLs.append(LL)
-    
-#scene = canvas(width=800, height=600, background=color.black)
-#floor = box(pos=vec(0, -5, 0), size=vec(15, 0.1, 10), color=color.white, opacity=1)
 
 #########################
-# MAIN LOOP
-#########################|
-t = 0
-dt = 0.01
-g = vec(0, -9.8, 0)
-b = 1.0 
+# START/STOP
+#########################
+go = False
+
+def start():
+    global BUTTON_MAIN
+    global go
+    init_people()
+    init_planks()
+    init_springs()
+    go = True
+    BUTTON_MAIN.delete()
+    BUTTON_MAIN = button(bind=stop, text='RESET', background=color.red)
+
+def stop():
+    global BUTTON_MAIN
+    global go
+    global person_list
+    global plank_list
+    global spring_list
+    
+    for ppl in person_list:
+        ppl.model.visible = False
+    
+    for pla in plank_list:
+        pla.model.visible = False
+        
+    for spr in spring_list:
+        spr.model.visible = False
+
+    go = False
+    BUTTON_MAIN.delete()
+    BUTTON_MAIN = button(bind=start, text='START', background=color.green)
+
+BUTTON_MAIN = button(bind=start, text='START', background=color.green)
+
+#########################
+# MAIN
+#########################
+
+t=0
+dt=0.01
+g = vec(0,-9.8,0)
 
 while True:
-    rate(60)
+    rate(30)
     t+=dt
+    
+    if not go: continue
+
+    #########################
+    # MAIN PHYSICS CALCULATIONS
+    #########################
+    
+    for p in plank_list:
+        p.net_force = vec(0, 0, 0)
+    
     for s in spring_list:
-        spring_vec = s.plank_B.model.pos - s.plank_A.model.pos
+        spring_vec = s.plankR.model.pos - s.plankL.model.pos
         current_length = mag(spring_vec)
         
         if current_length > 0: 
@@ -220,16 +265,14 @@ while True:
         stretch = current_length - s.rest_length
         tension_mag = s.k * stretch
 
-        force_on_A = tension_mag * spring_dir
-        force_on_B = -tension_mag * spring_dir
-
-        s.plank_A.net_force += force_on_A
-        s.plank_B.net_force += force_on_B
+        s.plankL.net_force += tension_mag * spring_dir
+        s.plankR.net_force += -tension_mag * spring_dir
         
-        s.model.pos = s.plank_A.model.pos
+        s.model.pos = s.plankL.model.pos
         s.model.axis = spring_vec
+        
     for person in person_list:
-        person.model.pos.x += person.vel * dt     
+        person.model.pos += person.vel * dt     
         for p in plank_list:
             if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
                 p.net_force += vec(0, -person.mass * 9.8, 0)
@@ -239,10 +282,7 @@ while True:
     for p in plank_list:
         if not p.anchored:
             p.net_force += p.mass * g 
-            p.net_force -= b * p.velocity
+            p.net_force -= SPR_B * p.velocity
             acceleration = p.net_force / p.mass
             p.velocity += acceleration * dt
             p.model.pos += p.velocity * dt      
-        p.net_force = vec(0,0,0)
-        
-    print(plank_list[5].model.pos)
