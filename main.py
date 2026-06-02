@@ -79,8 +79,8 @@ class Person:
         
 for i in range(PPL_NUM):
     init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y, 0)
-    
     ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
+    person_list.append(ppl)
     
 
 #########################
@@ -137,11 +137,10 @@ class Spring:
 
 spring_list = []
 
-num_planks = 12
 gap = 8.0 
 start_x = -44
 
-for i in range(num_planks - 1):
+for i in range(PLA_NUM - 1):
     s = Spring(k=200, plankL=plank_list[i], plankR=plank_list[i+1])
     spring_list.append(s)
 
@@ -207,7 +206,7 @@ g = vec(0, -9.8, 0)
 b = 1.0 
 
 while True:
-    rate(30)
+    rate(60)
     t+=dt
     for s in spring_list:
         spring_vec = s.plank_B.model.pos - s.plank_A.model.pos
@@ -229,6 +228,13 @@ while True:
         
         s.model.pos = s.plank_A.model.pos
         s.model.axis = spring_vec
+    for person in person_list:
+        person.model.pos.x += person.vel * dt     
+        for p in plank_list:
+            if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
+                p.net_force += vec(0, -person.mass * 9.8, 0)
+                person.model.pos.y = p.model.pos.y + (person.model.size.y / 2) + (p.model.size.y / 2)  
+                break 
 
     for p in plank_list:
         if not p.anchored:
