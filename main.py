@@ -14,7 +14,7 @@ STL_MAT = 0 # steel
 ALM_MAT = 1 # aluminum
 BRZ_MATERIAL = 2 # bronze
 
-PLA_WIDTH = 5
+PLA_WIDTH = 10
 
 WALL_WIDTH = 5
 
@@ -26,7 +26,7 @@ PPL_NUM = 3
 PPL_MASS = 5 # kg
 PPL_SPEED = 10 # m/s
 
-PLA_NUM = 30
+PLA_NUM = 10
 
 SPR_K = 50 # N/m
 SPR_NUM = 1 # in parallel between each
@@ -56,9 +56,10 @@ scene2.visible = True
 #########################
 
 BRIDGE_LEN = PLA_WIDTH*PLA_NUM
-WALL_L = box(pos=vec(-BRIDGE_LEN/2 -WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50+10, 100)) # people start from here
-WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50+10, 100)) # +10 is to fill edge due to floor's size.y
-FLOOR = box(pos=vec(0, -50, 0), size=vec(BRIDGE_LEN, 10, 100))
+
+WALL_L = box(pos=vec(-BRIDGE_LEN/2 -WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100)) # people start from here
+WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100)) # +10 is to fill edge due to floor's size.y
+FLOOR = box(pos=vec(0, -50, 0), size=vec(BRIDGE_LEN + 4*WALL_WIDTH*PPL_NUM, 10, 100))
 
 #########################
 # INIT PEOPLE
@@ -66,14 +67,14 @@ FLOOR = box(pos=vec(0, -50, 0), size=vec(BRIDGE_LEN, 10, 100))
 
 person_list = []
 
-PPL_DIM = vec(5,10,5)
+PPL_DIM = vec(5,10,5) # dimension of person
 class Person:
     def __init__(self, start_pos, mass, vel):
         self.pos = start_pos
         self.mass = mass
         self.vel = vec(vel,0,0)
         
-        self.model = box(
+        self.model = ellipsoid(
             texture = textures.wood,
             pos = self.pos,
             size = PPL_DIM,
@@ -86,7 +87,7 @@ def init_people():
     first_init = len(person_list)==0
     
     for i in range(PPL_NUM):
-        init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y, 0)
+        init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y/2, 0)
         if first_init:
             ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
             person_list.append(ppl)
@@ -103,11 +104,13 @@ def init_people():
 plank_list = []
 
 class Plank:
-    def __init__(self, start_pos, mass, length=10.0, height = 2.0, width=50.0):
+    def __init__(self, start_pos, mass, length=PLA_WIDTH, height = 2.0, width=50.0):
         self.pos = start_pos
         self.mass = mass
         self.velocity = vec(0, 0, 0)
         self.net_force = vec(0, 0, 0)
+        
+        self.angle = 0
 
         self.model = box(
             texture=textures.wood,
@@ -122,7 +125,7 @@ def init_planks():
     first_init = len(plank_list)==0
     
     for i in range(PLA_NUM):
-        init_pos = vec(5-BRIDGE_LEN/2 + (i*PLA_WIDTH), 0, 0)
+        init_pos = vec(-BRIDGE_LEN/2 + (i+0.5)*PLA_WIDTH, -1, 0)
         if first_init:
             pla = Plank(start_pos=init_pos, mass=5.0)
             
@@ -170,6 +173,7 @@ def init_springs():
             s = Spring(k=200, plankL = plank_list[i], plankR = plank_list[i+1])
             spring_list.append(s)
         else:
+            spring_list[i].angle = 0
             spring_list[i].model.pos = spring_list[i].plankL.model.pos
             spring_list[i].model.axis = spring_list[i].plankR.model.pos - spring_list[i].plankL.model.pos
             spring_list[i].rest_length = mag(spring_list[i].plankR.model.pos - spring_list[i].plankL.model.pos)
@@ -272,12 +276,17 @@ while True:
         s.model.axis = spring_vec
         
     for person in person_list:
-        person.model.pos += person.vel * dt     
+        person.model.pos += person.vel * dt 
+        
+        
         for p in plank_list:
             if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
                 p.net_force += vec(0, -person.mass * 9.8, 0)
                 person.model.pos.y = p.model.pos.y + (person.model.size.y / 2) + (p.model.size.y / 2)  
-                break 
+                break
+                
+        if abs(p.model.pos.x) >= BRIDGE_LEN/2: 
+            person.model.pos.y = 0 # PPL_DIM.y
 
     for p in plank_list:
         if not p.anchored:
@@ -285,4 +294,27 @@ while True:
             p.net_force -= SPR_B * p.velocity
             acceleration = p.net_force / p.mass
             p.velocity += acceleration * dt
-            p.model.pos += p.velocity * dt      
+            p.model.pos += p.velocity * dt
+
+    for i in range(len(plank_list)):
+        p = plank_list[i]
+        pL = plank_list[i-1] if i>0 else None
+        pR = plank_list[i+1] if i<len(plank_list)-1 else None
+        
+        distinguish = 1 if pR is None else (-1 if pL is None else 0)
+
+        if pR is None:
+            slope_vec = p.model.pos - plank_list[i-2].model.pos
+            pivot = vec(BRIDGE_LEN/2, 0, 0)   # right wall anchor point
+        elif pL is None:
+            slope_vec = plank_list[i+2].model.pos - p.model.pos
+            pivot = vec(-BRIDGE_LEN/2, 0, 0)  # left wall anchor point
+        else:
+            slope_vec = pR.model.pos - pL.model.pos
+            pivot = p.model.pos
+    
+    
+        if mag(slope_vec) == 0: continue
+        theta = atan2(slope_vec.y, slope_vec.x)
+        p.model.rotate(angle=theta - p.angle, axis=vec(0, 0, 1), origin=pivot)
+        p.angle = theta
