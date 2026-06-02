@@ -73,6 +73,7 @@ class Person:
         self.pos = start_pos
         self.mass = mass
         self.vel = vec(vel,0,0)
+        self.stopped = False
         
         self.model = ellipsoid(
             texture = textures.wood,
@@ -276,17 +277,21 @@ while True:
         s.model.axis = spring_vec
         
     for person in person_list:
-        person.model.pos += person.vel * dt 
-        
-        
-        for p in plank_list:
-            if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
-                p.net_force += vec(0, -person.mass * 9.8, 0)
-                person.model.pos.y = p.model.pos.y + (person.model.size.y / 2) + (p.model.size.y / 2)  
-                break
+        person.model.pos += person.vel * dt if (p.model.pos.x < BRIDGE_LEN/2) else 0
+
+        on_bridge = abs(p.model.pos.x) < BRIDGE_LEN/2
+        if on_bridge:
+            for p in plank_list:
+                if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
+                    p.net_force += vec(0, -person.mass * 9.8, 0)
+                    
+                    dx = person.model.pos.x - p.model.pos.x
+                    surface_y = p.model.pos.y + dx * tan(p.angle) + (p.model.size.y/2)/cos(p.angle)
+                    person.model.pos.y = surface_y + person.model.size.y/2
+                    break
                 
-        if abs(p.model.pos.x) >= BRIDGE_LEN/2: 
-            person.model.pos.y = 0 # PPL_DIM.y
+        if not on_bridge: 
+            person.model.pos.y = PPL_DIM.y/2
 
     for p in plank_list:
         if not p.anchored:
