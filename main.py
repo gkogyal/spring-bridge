@@ -134,28 +134,12 @@ class Spring:
             axis = (plankR.model.pos - plankL.model.pos), 
             radius = 0.5, coils = 8, thickness=0.3, color=color.gray(0.6)
         )
-    
-for i in range(PLA_NUM-1):
-    s = Spring(k=200, plankL = plank_list[i], plankR = plank_list[i+1])
-    spring_list.append(s)
 
-plank_list = []
 spring_list = []
 
 num_planks = 12
 gap = 8.0 
 start_x = -44
-
-for i in range(num_planks):
-    spawn_pos = vec(start_x + (i * gap), 0, 0)
-    p = Plank(start_pos=spawn_pos, mass=5.0)
-    
-    if i == 0 or i == num_planks - 1:
-        p.anchored = True
-    else:
-        p.anchored = False
-        
-    plank_list.append(p)
 
 for i in range(num_planks - 1):
     s = Spring(k=200, plankL=plank_list[i], plankR=plank_list[i+1])
