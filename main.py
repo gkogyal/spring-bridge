@@ -24,7 +24,7 @@ WALL_WIDTH = 5
 
 PPL_NUM = 3
 PPL_MASS = 5 # kg
-PPL_SPEED = 5 # m/s
+PPL_SPEED = 10 # m/s
 
 PLA_NUM = 10
 
@@ -32,7 +32,7 @@ SPR_K = 50 # N/m
 SPR_NUM = 1 # in parallel between each
 SPR_TYPE = 0 # defaults to torsion type
 SPR_MAT = 0 # defaults to aluminum
-SPR_B = 3 # dampening constant
+SPR_B = 10 # dampening constant
 
 extra_visuals = True
 
@@ -69,11 +69,10 @@ person_list = []
 
 PPL_DIM = vec(5,10,5) # dimension of person
 class Person:
-    def __init__(self, start_pos, mass, vel):
+    def __init__(self, start_pos, mass):
         self.pos = start_pos
         self.mass = mass
-        self.vel = vec(vel,0,0)
-        self.stopped = False
+        self.vel = vec(0,0,0) # vec(PPL_SPEED,0,0)
         
         self.model = ellipsoid(
             texture = textures.wood,
@@ -90,15 +89,14 @@ def init_people():
     for i in range(PPL_NUM):
         init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y/2, 0)
         if first_init:
-            ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
+            ppl = Person(start_pos=init_pos, mass = PPL_MASS)
             person_list.append(ppl)
         else:
             person_list[i].pos = init_pos
             person_list[i].model.pos = init_pos
             person_list[i].model.visible = True
-    
 
-#########################   
+#########################
 # INIT PLANKS
 #########################
 
@@ -214,12 +212,33 @@ te_curve = gcurve(graph=energy_graph, color=color.black, label="Total E.")
 
 
 #########################
-# START/STOP
+# MAIN BUTTONS
 #########################
 go = False
 
+def advance():
+    global person_list
+    global BUTTON_PPL
+    
+    for person in person_list:
+        person.vel = vec(PPL_SPEED,0,0)
+    
+    BUTTON_PPL.delete()
+    BUTTON_PPL = button(bind=cease, text = 'CEASE', background=color.red)
+        
+def cease():
+    global person_list
+    global BUTTON_PPL
+    
+    for person in person_list:
+        person.vel = vec(0,0,0)
+        
+    BUTTON_PPL.delete()
+    BUTTON_PPL = button(bind=advance, text = 'ADVANCE', background=color.green)
+
 def start():
     global BUTTON_MAIN
+    global BUTTON_PPL
     global go
     global t
     init_people()
@@ -233,9 +252,13 @@ def start():
     te_curve.data = []
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET', background=color.red)
+    BUTTON_PPL = button(bind=advance, text = 'ADVANCE', background=color.green)
+    
+    # ADD: start() updates certain buttons to be available
 
 def stop():
     global BUTTON_MAIN
+    global BUTTON_PPL
     global go
     global person_list
     global plank_list
@@ -253,6 +276,9 @@ def stop():
     go = False
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=start, text='START', background=color.green)
+    BUTTON_PPL.delete()
+    
+    # ADD: stop() updates certain buttons to be available
 
 BUTTON_MAIN = button(bind=start, text='START', background=color.green)
 
@@ -265,7 +291,7 @@ dt=0.01
 g = vec(0,-9.8,0)
 
 while True:
-    rate(100)
+    rate(30)
     t+=dt
     
     if not go: continue
@@ -296,22 +322,24 @@ while True:
         s.model.axis = spring_vec
         
     for person in person_list:
-            if person.model.pos.x < (BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM):
-                person.model.pos += person.vel * dt         
-            on_bridge = abs(person.model.pos.x) < BRIDGE_LEN/2
+                
+        # check stopped here
             
-            if on_bridge:
-                for p in plank_list:
-                    if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
-                        p.net_force += vec(0, -person.mass * 9.8, 0)
-                        
-                        dx = person.model.pos.x - p.model.pos.x
-                        surface_y = p.model.pos.y + dx * tan(p.angle) + (p.model.size.y/2)/cos(p.angle)
-                        person.model.pos.y = surface_y + person.model.size.y/2
-                        break
+        person.model.pos += person.vel * dt
+        
+        on_bridge = abs(p.model.pos.x) < BRIDGE_LEN/2
+        if on_bridge:            
+            for p in plank_list:
+                if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
+                    p.net_force += vec(0, -person.mass * 9.8, 0)
                     
-            if not on_bridge: 
-                person.model.pos.y = PPL_DIM.y/2
+                    dx = person.model.pos.x - p.model.pos.x
+                    surface_y = p.model.pos.y + dx * tan(p.angle) + (p.model.size.y/2)/cos(p.angle)
+                    person.model.pos.y = surface_y + person.model.size.y/2
+                    break
+                
+        if not on_bridge: 
+            person.model.pos.y = PPL_DIM.y/2
 
     for p in plank_list:
         if not p.anchored:
