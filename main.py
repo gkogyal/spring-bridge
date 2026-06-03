@@ -200,6 +200,19 @@ if (extra_visuals):
     arrow(pos=vec(0, 0, 0), axis=vec(0, 30, 0), color=color.cyan, shaftwidth=1.0)
     arrow(pos=vec(0, 0, 0), axis=vec(0, 0, 30), color=color.white, shaftwidth=1.0)
 
+
+#########################
+# GRAPH SETUP
+#########################
+disp_graph = graph(title="<b>Center Plank Displacement</b>", xtitle="Time (s)", ytitle="Y-Position (m)", width=1000, height=250)
+disp_curve = gcurve(color=color.red, width=2)
+
+energy_graph = graph(title="<b>System Energy</b>", xtitle="Time (s)", ytitle="Energy (Joules)", width=1000, height=250)
+ke_curve = gcurve(graph=energy_graph, color=color.blue, label="Kinetic E.")
+pe_curve = gcurve(graph=energy_graph, color=color.green, label="Potential E.")
+te_curve = gcurve(graph=energy_graph, color=color.black, label="Total E.")
+
+
 #########################
 # START/STOP
 #########################
@@ -208,10 +221,16 @@ go = False
 def start():
     global BUTTON_MAIN
     global go
+    global t
     init_people()
     init_planks()
     init_springs()
     go = True
+    t = 0
+    disp_curve.data = []
+    ke_curve.data = []
+    pe_curve.data = []
+    te_curve.data = []
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET', background=color.red)
 
@@ -324,3 +343,33 @@ while True:
         theta = atan2(slope_vec.y, slope_vec.x)
         p.model.rotate(angle=theta - p.angle, axis=vec(0, 0, 1), origin=pivot)
         p.angle = theta
+
+    # ==========================================
+    # ENERGY CALCULATIONS & GRAPHING
+    # ==========================================
+
+    # Energy calculations
+    sys_ke = 0
+    sys_pe_grav = 0
+    sys_pe_spring = 0
+    
+    for p in plank_list:
+        if not p.anchored:
+            sys_ke += 0.5 * p.mass * (mag(p.velocity)**2)
+            sys_pe_grav += p.mass * 9.8 * p.model.pos.y
+            
+    for s in spring_list:
+        stretch = mag(s.plankR.model.pos - s.plankL.model.pos) - s.rest_length
+        sys_pe_spring += 0.5 * s.k * (stretch**2)
+        
+    sys_pe_total = sys_pe_grav + sys_pe_spring
+    sys_energy_total = sys_ke + sys_pe_total
+    
+    ke_curve.plot(t, sys_ke)
+    pe_curve.plot(t, sys_pe_total)
+    te_curve.plot(t, sys_energy_total)
+
+    # Displacement graphing
+    center_index = PLA_NUM // 2
+    center_y = plank_list[center_index].model.pos.y
+    disp_curve.plot(t, center_y)
