@@ -24,15 +24,15 @@ WALL_WIDTH = 5
 
 PPL_NUM = 3
 PPL_MASS = 5 # kg
-PPL_SPEED = 10 # m/s
+PPL_SPEED = 5 # m/s
 
 PLA_NUM = 10
 
-SPR_K = 50 # N/m
+SPR_K = 25 # N/m
 SPR_NUM = 1 # in parallel between each
 SPR_TYPE = 0 # defaults to torsion type
 SPR_MAT = 0 # defaults to aluminum
-SPR_B = 10 # dampening constant
+SPR_B = 2 # dampening constant
 
 extra_visuals = True
 
@@ -291,7 +291,7 @@ dt=0.01
 g = vec(0,-9.8,0)
 
 while True:
-    rate(30)
+    rate(100)
     t+=dt
     
     if not go: continue
