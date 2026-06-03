@@ -69,11 +69,10 @@ person_list = []
 
 PPL_DIM = vec(5,10,5) # dimension of person
 class Person:
-    def __init__(self, start_pos, mass, vel):
+    def __init__(self, start_pos, mass):
         self.pos = start_pos
         self.mass = mass
-        self.vel = vec(vel,0,0)
-        self.stopped = False
+        self.vel = vec(0,0,0) # vec(PPL_SPEED,0,0)
         
         self.model = ellipsoid(
             texture = textures.wood,
@@ -90,13 +89,12 @@ def init_people():
     for i in range(PPL_NUM):
         init_pos = vec(-BRIDGE_LEN/2 - WALL_WIDTH*2*i - 5, PPL_DIM.y/2, 0)
         if first_init:
-            ppl = Person(start_pos=init_pos, mass = PPL_MASS, vel = PPL_SPEED)
+            ppl = Person(start_pos=init_pos, mass = PPL_MASS)
             person_list.append(ppl)
         else:
             person_list[i].pos = init_pos
             person_list[i].model.pos = init_pos
             person_list[i].model.visible = True
-    
 
 #########################
 # INIT PLANKS
@@ -201,12 +199,33 @@ if (extra_visuals):
     arrow(pos=vec(0, 0, 0), axis=vec(0, 0, 30), color=color.white, shaftwidth=1.0)
 
 #########################
-# START/STOP
+# MAIN BUTTONS
 #########################
 go = False
 
+def advance():
+    global person_list
+    global BUTTON_PPL
+    
+    for person in person_list:
+        person.vel = vec(PPL_SPEED,0,0)
+    
+    BUTTON_PPL.delete()
+    BUTTON_PPL = button(bind=cease, text = 'CEASE', background=color.red)
+        
+def cease():
+    global person_list
+    global BUTTON_PPL
+    
+    for person in person_list:
+        person.vel = vec(0,0,0)
+        
+    BUTTON_PPL.delete()
+    BUTTON_PPL = button(bind=advance, text = 'ADVANCE', background=color.green)
+
 def start():
     global BUTTON_MAIN
+    global BUTTON_PPL
     global go
     init_people()
     init_planks()
@@ -214,9 +233,13 @@ def start():
     go = True
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET', background=color.red)
+    BUTTON_PPL = button(bind=advance, text = 'ADVANCE', background=color.green)
+    
+    # ADD: start() updates certain buttons to be available
 
 def stop():
     global BUTTON_MAIN
+    global BUTTON_PPL
     global go
     global person_list
     global plank_list
@@ -234,6 +257,9 @@ def stop():
     go = False
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=start, text='START', background=color.green)
+    BUTTON_PPL.delete()
+    
+    # ADD: stop() updates certain buttons to be available
 
 BUTTON_MAIN = button(bind=start, text='START', background=color.green)
 
@@ -277,10 +303,13 @@ while True:
         s.model.axis = spring_vec
         
     for person in person_list:
-        person.model.pos += person.vel * dt if (p.model.pos.x < BRIDGE_LEN/2) else 0
-
+                
+        # check stopped here
+            
+        person.model.pos += person.vel * dt
+        
         on_bridge = abs(p.model.pos.x) < BRIDGE_LEN/2
-        if on_bridge:
+        if on_bridge:            
             for p in plank_list:
                 if (p.model.pos.x - p.model.size.x/2) <= person.model.pos.x <= (p.model.pos.x + p.model.size.x/2):
                     p.net_force += vec(0, -person.mass * 9.8, 0)
@@ -323,3 +352,5 @@ while True:
         theta = atan2(slope_vec.y, slope_vec.x)
         p.model.rotate(angle=theta - p.angle, axis=vec(0, 0, 1), origin=pivot)
         p.angle = theta
+    
+    print(plank_list[PLA_NUM/2].model.pos)
