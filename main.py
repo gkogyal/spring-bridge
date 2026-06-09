@@ -21,16 +21,16 @@ WALL_WIDTH = 10
 
 BREAK_THRESHOLDS = [
     [18.0, 22.0, 12.0],
-    [12.0, 15.0,  8.0],
-    [10.0, 13.0,  7.0],
+    [12.0, 15.0, 8.0],
+    [10.0, 13.0, 7.0],
 ]
 
 #########################
-# INPUTS
+# DEFAULT INPUTS
 #########################
 
-PPL_NUM = 7
-PPL_MASS = 100
+PPL_NUM = 5
+PPL_MASS = 10
 PPL_SPEED = 12
 
 PLA_NUM = 10
@@ -107,51 +107,51 @@ def set_spr_mat(m):
     global SPR_MAT
     SPR_MAT = m.index
 
+hmap_widget_gap = "  ||  "
 def create_widgets():
     global ppl_num_label, ppl_mass_label, ppl_speed_label
     global pla_num_label, spr_k_label, spr_num_label, spr_b_label
-    scene.select()
+    hmap_scene.select()
 
-    scene.append_to_caption("<b>Parameters</b>\n\n")
-    scene.append_to_caption("<b>--- People ---</b>\n")
+    hmap_scene.append_to_caption(f"{hmap_widget_gap}<b>Parameters</b>\n{hmap_widget_gap}\n")
+    hmap_scene.append_to_caption(f"{hmap_widget_gap}<b>--- People ---</b>\n")
 
-    scene.append_to_caption("# People: ")
+    hmap_scene.append_to_caption(f"{hmap_widget_gap}# People: ")
     ppl_num_label = wtext(text=f'{PPL_NUM}')
     widget_list.append(slider(min=1, max=10, value=PPL_NUM, step=1, length=180, bind=set_ppl_num))
 
-    scene.append_to_caption("\nMass (kg): ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Mass (kg): ")
     ppl_mass_label = wtext(text=f'{PPL_MASS:.1f}')
-    widget_list.append(slider(min=1, max=200, value=PPL_MASS, step=1, length=180, bind=set_ppl_mass))
+    widget_list.append(slider(min=1, max=99, value=PPL_MASS, step=1, length=180, bind=set_ppl_mass))
 
-    scene.append_to_caption("\nSpeed (m/s): ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Speed (m/s): ")
     ppl_speed_label = wtext(text=f'{PPL_SPEED:.1f}')
     widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))
 
-    scene.append_to_caption("\n\n<b>--- Planks ---</b>\n")
-    scene.append_to_caption("# Planks: ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n")
+    hmap_scene.append_to_caption(f"{hmap_widget_gap}# Planks: ")
     pla_num_label = wtext(text=f'{PLA_NUM}')
     widget_list.append(slider(min=4, max=20, value=PLA_NUM, step=1, length=180, bind=set_pla_num))
 
-    scene.append_to_caption("\n\n<b>--- Springs ---</b>\n")
-    scene.append_to_caption("k (N/m): ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Springs ---</b>\n")
+    hmap_scene.append_to_caption(f"{hmap_widget_gap}k (N/m): ")
     spr_k_label = wtext(text=f'{SPR_K:.0f}')
     widget_list.append(slider(min=100, max=500, value=SPR_K, step=10, length=180, bind=set_spr_k))
 
-    scene.append_to_caption("\nParallel #: ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Parallel #: ")
     spr_num_label = wtext(text=f'{SPR_NUM}')
     widget_list.append(slider(min=1, max=5, value=SPR_NUM, step=1, length=180, bind=set_spr_num))
 
-    scene.append_to_caption("\nDamping b: ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Damping b: ")
     spr_b_label = wtext(text=f'{SPR_B:.1f}')
     widget_list.append(slider(min=0, max=20, value=SPR_B, step=1, length=180, bind=set_spr_b))
 
-    scene.append_to_caption("\n\nType: ")
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}Type: ")
     widget_list.append(menu(choices=["Torsion", "Tension", "Compression"], index=SPR_TYPE, bind=set_spr_type))
 
-    scene.append_to_caption("  Mat: ")
+    hmap_scene.append_to_caption(f"  Mat: ")
     widget_list.append(menu(choices=["Steel", "Aluminum", "Bronze"], index=SPR_MAT, bind=set_spr_mat))
-
-    scene.append_to_caption("\n\n")
+    hmap_scene.append_to_caption("\n\n\n\n\n\n")
 
 #########################
 # SCENE SETUP
@@ -159,110 +159,12 @@ def create_widgets():
 
 scene.userzoom = False
 scene.resizable = False
-scene.length = 10
+scene.align = 'left'
 scene.width = 700
 scene.height = 400
 scene.background = color.white
-scene.title = "<b>PHYSICS FINAL PROJECT: Spring Bridge</b>"
+scene.title = "<b>PHYSICS FINAL PROJECT: Spring Bridge</b>" + " ".repeat(20)
 scene.select()
-
-#########################
-# HEATMAP CANVAS
-#########################
-
-MAX_PLANKS = 20
-HMAP_W = 260
-HMAP_H = 400
-HMAP_MARGIN = 4
-
-hmap_scene = canvas(
-    title="<b>Force Heatmap</b>",
-    width=HMAP_W, height=HMAP_H,
-    background=color.white,
-    userzoom=False, userspin=False, resizable=False
-)
-
-# World coords: cells span Y from +half to -half, X fills width
-HMAP_WORLD_H = 20.0 
-HMAP_WORLD_W = 10.0
-hmap_scene.range = HMAP_WORLD_H * 0.65
-hmap_scene.camera.pos  = vec(0, 0, 50)
-hmap_scene.camera.axis = vec(0, 0, -1)
-
-CELL_H_WORLD = HMAP_WORLD_H / MAX_PLANKS
-CELL_GAP     = CELL_H_WORLD * 0.06
-
-hmap_boxes  = []
-hmap_labels = []
-
-for j in range(MAX_PLANKS):
-    cy = HMAP_WORLD_H/2 - (j + 0.5) * CELL_H_WORLD
-    b = box(
-        canvas=hmap_scene,
-        pos=vec(0, cy, 0),
-        size=vec(HMAP_WORLD_W, CELL_H_WORLD - CELL_GAP, 0.1),
-        color=color.gray(0.85),
-        visible=False
-    )
-    hmap_boxes.append(b)
-    lbl = label(
-        canvas=hmap_scene,
-        pos=vec(0, cy, 0.2),
-        text='',
-        height=8,
-        color=color.black,
-        box=False,
-        opacity=0,
-        visible=False
-    )
-    hmap_labels.append(lbl)
-
-# gradient legend
-LEGEND_STEPS = 30
-LEG_Y = -(HMAP_WORLD_H/2 + 1.6)
-LEG_W = HMAP_WORLD_W
-LEG_H = 0.8
-for j in range(LEGEND_STEPS):
-    t_val = j / (LEGEND_STEPS - 1)
-    norm_val = t_val * 2 - 1
-    if norm_val <= 0:
-        lc = vec(1 + norm_val, 1 + norm_val, 1.0)
-    else:
-        lc = vec(1.0, 1 - norm_val, 1 - norm_val)
-    lx = -LEG_W/2 + (t_val + 0.5/LEGEND_STEPS) * LEG_W
-    box(canvas=hmap_scene,
-        pos=vec(lx, LEG_Y, 0),
-        size=vec(LEG_W/LEGEND_STEPS, LEG_H, 0.1),
-        color=lc)
-
-label(canvas=hmap_scene, pos=vec(-LEG_W/2, LEG_Y - 1.1, 0), text='up', height=8, color=color.blue, box=False, opacity=0)
-label(canvas=hmap_scene, pos=vec(0, LEG_Y - 1.1, 0), text='0', height=8, color=color.black, box=False, opacity=0)
-label(canvas=hmap_scene, pos=vec(LEG_W/2, LEG_Y - 1.1, 0), text='down', height=8, color=color.red, box=False, opacity=0)
-
-# return focus to main scene
-scene.select()
-
-# recolors the heatmap cells
-def update_heatmap(forces, max_force):
-    n = len(forces)
-    for i in range(MAX_PLANKS):
-        if i < n:
-            fy = forces[i]
-            norm_v  = max(-1.0, min(1.0, fy / max_force)) if max_force > 0 else 0.0
-            if norm_v >= 0:
-                c = vec(1 - norm_v, 1 - norm_v, 1.0)
-            else:
-                a = -norm_v
-                c = vec(1.0, 1 - a, 1 - a)
-            hmap_boxes[i].color = c
-            hmap_boxes[i].visible = True
-            hmap_labels[i].text = f'P{i+1}  {fy:.0f}N'
-            hmap_labels[i].color = color.black if abs(norm_v) < 0.55 else color.white
-            hmap_labels[i].visible = True
-        else:
-            hmap_boxes[i].visible = False
-            hmap_labels[i].visible = False
-
 
 #########################
 # WORLD
@@ -271,7 +173,7 @@ def update_heatmap(forces, max_force):
 BRIDGE_LEN = PLA_WIDTH * PLA_NUM
 
 WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
-WALL_R = box(pos=vec( BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
+WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
 # PERSON CLASS
@@ -305,7 +207,7 @@ def init_people():
 #########################
 
 plank_list = []
-plank_force_magnitudes = []   # stores |net_force.y| per plank for heatmap
+plank_force_magnitudes = []
 
 class Plank:
     def __init__(self, start_pos, length=PLA_WIDTH, height=2.0, width=50.0):
@@ -399,8 +301,6 @@ def init_springs():
             s = spring_list[i]
             s.broken = False
             s.rest_length = mag(s.plankR.model.pos - s.plankL.model.pos)
-            
-            # rebvild if SPR_NUM changed
             for h in s.models:
                 h.visible = False
             s.models = []
@@ -422,6 +322,51 @@ if extra_visuals:
     arrow(pos=vec(0,0,0), axis=vec(0, 0, 30), color=color.white, shaftwidth=1.0)
 
 #########################
+# FORCE HEATMAP CANVAS
+#########################
+
+hmap_scene = canvas(
+    title="<b>       Plank Force Heatmap</b>",
+    width=300, height=377,
+    background=color.black,
+    userzoom=False, userspin=False, resizable=False,
+    align='left',
+    color=vec(1,1,1)
+)
+hmap_scene.camera.pos = vec(0, 0, 1)
+hmap_scene.camera.axis = vec(0, 0, -1)
+hmap_scene.up = vec(0, 1, 0)
+hmap_scene.range = 1.05
+
+hmap_boxes = []
+
+def build_heatmap_boxes():
+    global hmap_boxes
+    for b in hmap_boxes:
+        b.visible = False
+    hmap_boxes = []
+    n = PLA_NUM
+    cell_w = 2.0 / n
+    gap = cell_w * 0.05
+    for i in range(n):
+        cx = -1.0 + (i + 0.5) * cell_w
+        b = box(
+            canvas=hmap_scene,
+            pos=vec(cx, 0, 0),
+            size=vec(cell_w - gap, 1.9, 0.01),
+            color=color.blue
+        )
+        hmap_boxes.append(b)
+
+def update_heatmap():
+    if not hmap_boxes:
+        return
+    max_force = max(abs(PPL_MASS * 9.8 * PPL_NUM), 1.0)
+    for i, b in enumerate(hmap_boxes):
+        t = min(abs(plank_force_magnitudes[i]) / max_force, 1.0)
+        b.color = vec(t, 0, 1.0 - t)
+
+#########################
 # GRAPHS
 #########################
 
@@ -429,41 +374,42 @@ if extra_visuals:
 disp_graph = graph(
     title="<b>Center Plank Displacement</b>",
     xtitle="Time (s)", ytitle="Y-Position (m)",
-    width=700, height=220
+    width=500, height=220,
+    align='left'
 )
-disp_curve = gcurve(color=color.red, width=2)
+disp_curve = gcurve(graph=disp_graph, color=color.red, width=2)
 
 # --- Graph 2: System Energy ---
 energy_graph = graph(
     title="<b>System Energy</b>",
     xtitle="Time (s)", ytitle="Energy (J)",
-    width=700, height=220
+    width=500, height=220,
+    align='left'
 )
-ke_curve   = gcurve(graph=energy_graph, color=color.blue,  label="Kinetic E.")
-pe_curve   = gcurve(graph=energy_graph, color=color.green, label="Potential E.")
-te_curve   = gcurve(graph=energy_graph, color=color.black, label="Total E.")
+ke_curve = gcurve(graph=energy_graph, color=color.blue, label="Kinetic E.")
+pe_curve = gcurve(graph=energy_graph, color=color.green, label="Potential E.")
+te_curve = gcurve(graph=energy_graph, color=color.black, label="Total E.")
 
-# --- Graph 3: Max Spring Stress (fraction of break threshold) ---
+# --- Graph 3: Max Spring Stress ---
 stress_graph = graph(
     title="<b>Max Spring Stress  (0 = relaxed · 1 = breaking)</b>",
     xtitle="Time (s)", ytitle="Stress Fraction",
-    width=700, height=200,
-    ymin=0, ymax=1.1
+    width=500, height=220,
+    ymin=0, ymax=1.1,
+    align='left'
 )
 stress_curve = gcurve(graph=stress_graph, color=color.orange, width=2, label="Max stress")
 
-# --- Graph 4: Net Vertical Force per Plank (bar-style) ---
+# --- Graph 4: Net Vertical Force per Plank ---
 force_graph = graph(
     title="<b>Plank Net Vertical Force</b>",
     xtitle="Plank index", ytitle="Net Fy (N)",
-    width=700, height=220,
-    xmin=-0.5, xmax=19.5,
-    ymin=-2000, ymax=500
+    width=500, height=220,
+    xmin=-0.5, xmax=PLA_NUM-0.5,
+    ymin=-2000, ymax=500,
+    align='left'
 )
-
-
-force_dots = gdots(graph=force_graph, color=color.purple, size=8)
-
+force_curve = gcurve(graph=force_graph, color=color.purple, width=2)
 
 #########################
 # BUTTON CALLBACKS
@@ -499,6 +445,7 @@ def start():
     init_people()
     init_planks()
     init_springs()
+    build_heatmap_boxes()
 
     go = True
     t = 0
@@ -507,7 +454,7 @@ def start():
     pe_curve.data = []
     te_curve.data = []
     stress_curve.data = []
-    force_dots.data = []
+    force_curve.delete()
 
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET\n', background=color.red, pos=scene.title_anchor)
@@ -515,7 +462,7 @@ def start():
 
 def stop():
     global BUTTON_MAIN, BUTTON_PPL, go, ppl_moving
-    global person_list, plank_list, spring_list
+    global person_list, plank_list, spring_list, hmap_boxes
 
     enable_widgets()
     ppl_moving = False
@@ -537,11 +484,16 @@ def stop():
         spr.hide_all()
     spring_list = []
 
+    for b in hmap_boxes:
+        b.visible = False
+    hmap_boxes = []
+
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=start, text='START\n', background=color.green, pos=scene.title_anchor)
 
 BUTTON_MAIN = button(bind=start, text='START\n', background=color.green, pos=scene.title_anchor)
 create_widgets()
+scene.select()
 
 #########################
 # MAIN LOOP
@@ -591,13 +543,11 @@ while True:
         if stress > max_stress:
             max_stress = stress
 
-        # Spring color: green → yellow → red based on stress
         if stress < 0.5:
             spr_col = vec(stress * 2, 1, 0)
         else:
             spr_col = vec(1, 1 - (stress - 0.5)*2, 0)
 
-        # Update all parallel helix models
         s.update_visuals(spring_vec, spr_col, visible=True)
 
     # -------- People movement & weight --------
@@ -638,9 +588,9 @@ while True:
             p.velocity += (p.net_force / PLA_MASS) * dt
             p.model.pos += p.velocity * dt
 
-    # -------- Record per-plank F.y for the heatmap and force graph --------
+    # -------- Record per-plank Fy --------
     for i, p in enumerate(plank_list):
-        plank_force_magnitudes[i] = p.net_force.y   # signed vertical force
+        plank_force_magnitudes[i] = p.net_force.y
 
     # -------- Plank rotation --------
     for i in range(len(plank_list)):
@@ -690,16 +640,11 @@ while True:
     center_index = len(plank_list) // 2
     disp_curve.plot(t, plank_list[center_index].model.pos.y)
 
-    # Graph 3: max spring stress
     stress_curve.plot(t, max_stress)
 
-    # Graph 4: force per plank as a scatter (index vs Fy)
-    # redrasws all dots each frame using a fresh data list
-    new_force_data = []
+    force_curve.delete()
     for i, fy in enumerate(plank_force_magnitudes):
-        new_force_data.append((i, fy))
-    force_dots.data = new_force_data
+        force_curve.plot(i, fy)
 
-    # -------- Heatmap: update native VPython canvas --------
-    max_force_val = max(abs(PPL_MASS * 9.8 * PPL_NUM), 1.0)
-    update_heatmap(plank_force_magnitudes, max_force_val)
+    # -------- Heatmap --------
+    update_heatmap()
