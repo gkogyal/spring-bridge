@@ -152,8 +152,7 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"  Mat: ")
     widget_list.append(menu(choices=["Steel", "Aluminum", "Bronze"], index=SPR_MAT, bind=set_spr_mat))
-    hmap_scene.append_to_caption("\n\n\n\n\n\n")
-
+    hmap_scene.append_to_caption("\n\n\n\n\n" + "="*50 + "\n\n\n\n\n")
 #########################
 # SCENE SETUP
 #########################
@@ -329,7 +328,7 @@ if extra_visuals:
 
 hmap_scene = canvas(
     title="<b>       Plank Force Heatmap</b>",
-    width=300, height=377,
+    width=350, height=380,
     background=color.black,
     userzoom=False, userspin=False, resizable=False,
     align='left',
@@ -379,7 +378,7 @@ def update_heatmap():
 disp_graph = graph(
     title="<b>Center Plank Displacement</b>",
     xtitle="Time (s)", ytitle="Y-Position (m)",
-    width=500, height=220,
+    width=350, height=220,
     align='left'
 )
 disp_curve = gcurve(graph=disp_graph, color=color.red, width=2)
@@ -388,7 +387,7 @@ disp_curve = gcurve(graph=disp_graph, color=color.red, width=2)
 energy_graph = graph(
     title="<b>System Energy</b>",
     xtitle="Time (s)", ytitle="Energy (J)",
-    width=500, height=220,
+    width=350, height=220,
     align='left'
 )
 ke_curve = gcurve(graph=energy_graph, color=color.blue, label="Kinetic E.")
@@ -399,7 +398,7 @@ te_curve = gcurve(graph=energy_graph, color=color.black, label="Total E.")
 stress_graph = graph(
     title="<b>Max Spring Stress  (0 = relaxed · 1 = breaking)</b>",
     xtitle="Time (s)", ytitle="Stress Fraction",
-    width=500, height=220,
+    width=375, height=220,
     ymin=0, ymax=1.1,
     align='left'
 )
@@ -409,7 +408,7 @@ stress_curve = gcurve(graph=stress_graph, color=color.orange, width=2, label="Ma
 force_graph = graph(
     title="<b>Plank Net Vertical Force</b>",
     xtitle="Plank index", ytitle="Net Fy (N)",
-    width=500, height=220,
+    width=350, height=220,
     xmin=-0.5, xmax=PLA_NUM-0.5,
     ymin=-2000, ymax=500,
     align='left'
