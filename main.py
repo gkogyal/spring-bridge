@@ -166,7 +166,7 @@ scene.height = 400
 scene.background = color.white
 scene.title = "<b>PHYSICS FINAL PROJECT: Spring Bridge</b>" + " " * 20
 scene.select()
-disp_label = label(pos=vec(0, 35, 0), text="Center Displacement: 0.00 m", box=False, height=15)
+disp_label = label(pos=vec(0, 50, 0), text="Center Displacement: 0.00 m", box=False, height=15)
 
 #########################
 # WORLD
@@ -645,7 +645,7 @@ while True:
     te_curve.plot(t, sys_energy_total)
 
     center_index = len(plank_list) // 2
-    
+
     stress_curve.plot(t, max_stress)
 
     force_curve.data = []    
