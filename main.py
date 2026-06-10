@@ -4,7 +4,6 @@ from vpython import *
 
 #Web VPython 3.2
 
-
 #########################
 # CONSTANTS
 #########################
@@ -153,6 +152,7 @@ def create_widgets():
     hmap_scene.append_to_caption(f"  Mat: ")
     widget_list.append(menu(choices=["Steel", "Aluminum", "Bronze"], index=SPR_MAT, bind=set_spr_mat))
     hmap_scene.append_to_caption("\n\n\n\n\n" + "="*50 + "\n\n\n\n\n")
+
 #########################
 # SCENE SETUP
 #########################
@@ -177,6 +177,27 @@ WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_
 WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
+# PENGUIN MODEL
+#########################
+
+def create_penguin_walker(start_pos):
+    body = ellipsoid(pos=vec(0,0,0), size=vec(9,15,7), color=color.black)
+    belly = ellipsoid(pos=vec(0.5,-2,3), size=vec(7,13,5), color=color.white)
+    head = sphere(pos=vec(-1,7,1), radius=4.0, color=color.black)
+    eye_L = sphere(pos=vec(-2.5,8.5,3), radius=1.2, color=color.white)
+    pupil_L = sphere(pos=vec(-2.8,8.7,4), radius=0.5, color=color.black)
+    eye_R = sphere(pos=vec(0.5,7.5,3.5), radius=0.6, color=color.white)
+    pupil_R = sphere(pos=vec(0.5,7.3,4), radius=0.3, color=color.black)
+    beak = cone(pos=vec(-0.5,6.5,4), axis=vec(-1,-1,3), radius=1.5, color=color.orange)
+    flipper_L = ellipsoid(pos=vec(-5,1,0), size=vec(2,12,3), axis=vec(2,-1,1), color=color.black)
+    flipper_R = ellipsoid(pos=vec(4.5,-2,0), size=vec(1,7,5), axis=vec(0,-3,-1), color=color.black)
+    foot_L = ellipsoid(pos=vec(-3,-7.5,3), size=vec(4,3,4), color=color.orange)
+    foot_R = ellipsoid(pos=vec(3,-8.5,1), size=vec(2,1,7), color=color.orange)
+    penguin_model = compound([body,belly,head,eye_L,pupil_L,eye_R,pupil_R,beak,flipper_L,flipper_R,foot_L,foot_R], pos=start_pos)
+    penguin_model.size = PPL_DIM
+    return penguin_model
+
+#########################
 # PERSON CLASS
 #########################
 
@@ -185,12 +206,7 @@ PPL_DIM = vec(10, 20, 10)
 
 class Person:
     def __init__(self, start_pos):
-        self.model = box(
-            texture=textures.wood,
-            pos=start_pos,
-            size=PPL_DIM,
-            color=vec(0, 0, 0)
-        )
+        self.model = create_penguin_walker(start_pos)
 
 def init_people():
     global person_list
@@ -291,7 +307,6 @@ class Spring:
         for h in self.models:
             h.visible = False
 
-
 def init_springs():
     global spring_list
     first_init = (len(spring_list) == 0)
@@ -334,6 +349,7 @@ hmap_scene = canvas(
     align='left',
     color=vec(1,1,1)
 )
+
 hmap_scene.camera.pos = vec(0, 0, 1)
 hmap_scene.camera.axis = vec(0, 0, -1)
 hmap_scene.up = vec(0, 1, 0)
@@ -506,7 +522,6 @@ scene.select()
 t = 0
 dt = 0.01
 g = vec(0, -9.8, 0)
-
 
 while True:
     rate(100)
