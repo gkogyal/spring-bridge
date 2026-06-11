@@ -126,9 +126,7 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Speed (m/s): ")
     ppl_speed_label = wtext(text=f'{PPL_SPEED:.1f}')
-    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))
-
-    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n")
+    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n")
     hmap_scene.append_to_caption(f"{hmap_widget_gap}# Planks: ")
     pla_num_label = wtext(text=f'{PLA_NUM}')
     widget_list.append(slider(min=4, max=20, value=PLA_NUM, step=1, length=180, bind=set_pla_num))
@@ -151,6 +149,7 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"  Mat: ")
     widget_list.append(menu(choices=["Steel", "Aluminum", "Bronze"], index=SPR_MAT, bind=set_spr_mat))
+
     hmap_scene.append_to_caption("\n\n\n\n\n" + "="*123 + "\n\n\n\n\n")
 
 #########################
@@ -177,6 +176,7 @@ WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_
 WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
+<<<<<<< HEAD
 # MODEL
 #########################
 
@@ -184,7 +184,7 @@ def create_model(start_pos):
     return create_penguin_walker(start_pos)
 
 def create_penguin_walker(start_pos):
-    
+
     body = ellipsoid(pos=vec(0,0,0), size=vec(9,15,7), color=color.black)
     belly = ellipsoid(pos=vec(0.5,-2,3), size=vec(7,13,5), color=color.white)
     head = sphere(pos=vec(-1,7,1), radius=4.0, color=color.black)
@@ -199,7 +199,7 @@ def create_penguin_walker(start_pos):
     foot_R = ellipsoid(pos=vec(3,-8.5,1), size=vec(2,1,7), color=color.orange)
     penguin_model = compound([body,belly,head,eye_L,pupil_L,eye_R,pupil_R,beak,flipper_L,flipper_R,foot_L,foot_R], pos=start_pos)
     penguin_model.size = PPL_DIM
-    
+
     return penguin_model
 
 #########################
@@ -389,7 +389,7 @@ def update_heatmap():
         color_vec = vec(t_val, 0, 1.0 - t_val)
         b.color = color_vec
         if i < len(plank_list):
-            plank_list[i].model.color = color_vec   
+            plank_list[i].model.color = color_vec
 
 #########################
 # GRAPHS
@@ -540,8 +540,7 @@ while True:
 
     for p in plank_list:
         p.net_force = vec(0, 0, 0)
-    
-    
+
     # -------- Bridge collapse check --------
     if any(s.broken for s in spring_list):
         disp_label.text = f"The Bridge Collapsed! Max displacement: {plank_list[PLA_NUM//2].model.pos.y:.2f}m"
@@ -669,7 +668,7 @@ while True:
 
     stress_curve.plot(t, max_stress)
 
-    force_curve.data = []    
+    force_curve.data = []
     for i, fy in enumerate(plank_force_magnitudes):
         force_curve.plot(i, fy)
 
