@@ -2,14 +2,14 @@ import warnings
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 from vpython import *
 
-#Web VPython 3.2
+Web VPython 3.2
 
 #########################
 # CONSTANTS
 #########################
 TORSION_TYPE = 0
 TENSION_TYPE = 1
-COMPRES = 2
+COMPRES_TYPE = 2
 STL_MAT = 0
 ALM_MAT = 1
 BRZ_MAT = 2
@@ -72,7 +72,7 @@ def set_ppl_num(s):
 def set_ppl_mass(s):
     global PPL_MASS, ppl_mass_label
     PPL_MASS = s.value
-    ppl_mass_label.text = f'{PPL_MASS:.1f}'
+    ppl_mass_label.text = f'{PPL_MASS:.1f}'        
 
 def set_ppl_speed(s):
     global PPL_SPEED, ppl_speed_label
@@ -151,7 +151,7 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"  Mat: ")
     widget_list.append(menu(choices=["Steel", "Aluminum", "Bronze"], index=SPR_MAT, bind=set_spr_mat))
-    hmap_scene.append_to_caption("\n\n\n\n\n\n")
+    hmap_scene.append_to_caption("\n\n\n\n\n" + "="*123 + "\n\n\n\n\n")
 
 #########################
 # SCENE SETUP
@@ -163,8 +163,9 @@ scene.align = 'left'
 scene.width = 700
 scene.height = 400
 scene.background = color.white
-scene.title = "<b>PHYSICS FINAL PROJECT: Spring Bridge</b>" + " ".repeat(20)
+scene.title = "<b>PHYSICS FINAL PROJECT: Spring Bridge</b>" + " " * 20
 scene.select()
+disp_label = label(pos=vec(0, 50, 0), text="Center Displacement: 0.00 m", box=False, height=15)
 
 #########################
 # WORLD
@@ -176,6 +177,32 @@ WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_
 WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
+# MODEL
+#########################
+
+def create_model(start_pos):
+    return create_penguin_walker(start_pos)
+
+def create_penguin_walker(start_pos):
+    
+    body = ellipsoid(pos=vec(0,0,0), size=vec(9,15,7), color=color.black)
+    belly = ellipsoid(pos=vec(0.5,-2,3), size=vec(7,13,5), color=color.white)
+    head = sphere(pos=vec(-1,7,1), radius=4.0, color=color.black)
+    eye_L = sphere(pos=vec(-2.5,8.5,3), radius=1.2, color=color.white)
+    pupil_L = sphere(pos=vec(-2.8,8.7,4), radius=0.5, color=color.black)
+    eye_R = sphere(pos=vec(0.5,7.5,3.5), radius=0.6, color=color.white)
+    pupil_R = sphere(pos=vec(0.5,7.3,4), radius=0.3, color=color.black)
+    beak = cone(pos=vec(-0.5,6.5,4), axis=vec(-1,-1,3), radius=1.5, color=color.orange)
+    flipper_L = ellipsoid(pos=vec(-5,1,0), size=vec(2,12,3), axis=vec(2,-1,1), color=color.black)
+    flipper_R = ellipsoid(pos=vec(4.5,-2,0), size=vec(1,7,5), axis=vec(0,-3,-1), color=color.black)
+    foot_L = ellipsoid(pos=vec(-3,-7.5,3), size=vec(4,3,4), color=color.orange)
+    foot_R = ellipsoid(pos=vec(3,-8.5,1), size=vec(2,1,7), color=color.orange)
+    penguin_model = compound([body,belly,head,eye_L,pupil_L,eye_R,pupil_R,beak,flipper_L,flipper_R,foot_L,foot_R], pos=start_pos)
+    penguin_model.size = PPL_DIM
+    
+    return penguin_model
+
+#########################
 # PERSON CLASS
 #########################
 
@@ -184,12 +211,7 @@ PPL_DIM = vec(10, 20, 10)
 
 class Person:
     def __init__(self, start_pos):
-        self.model = box(
-            texture=textures.wood,
-            pos=start_pos,
-            size=PPL_DIM,
-            color=vec(0, 0, 0)
-        )
+        self.model = create_model(start_pos)
 
 def init_people():
     global person_list
@@ -290,7 +312,6 @@ class Spring:
         for h in self.models:
             h.visible = False
 
-
 def init_springs():
     global spring_list
     first_init = (len(spring_list) == 0)
@@ -327,12 +348,13 @@ if extra_visuals:
 
 hmap_scene = canvas(
     title="<b>       Plank Force Heatmap</b>",
-    width=300, height=377,
+    width=350, height=380,
     background=color.black,
     userzoom=False, userspin=False, resizable=False,
     align='left',
     color=vec(1,1,1)
 )
+
 hmap_scene.camera.pos = vec(0, 0, 1)
 hmap_scene.camera.axis = vec(0, 0, -1)
 hmap_scene.up = vec(0, 1, 0)
@@ -363,8 +385,11 @@ def update_heatmap():
         return
     max_force = max(abs(PPL_MASS * 9.8 * PPL_NUM), 1.0)
     for i, b in enumerate(hmap_boxes):
-        t = min(abs(plank_force_magnitudes[i]) / max_force, 1.0)
-        b.color = vec(t, 0, 1.0 - t)
+        t_val = min(abs(plank_force_magnitudes[i]) / max_force, 1.0)
+        color_vec = vec(t_val, 0, 1.0 - t_val)
+        b.color = color_vec
+        if i < len(plank_list):
+            plank_list[i].model.color = color_vec   
 
 #########################
 # GRAPHS
@@ -374,7 +399,7 @@ def update_heatmap():
 disp_graph = graph(
     title="<b>Center Plank Displacement</b>",
     xtitle="Time (s)", ytitle="Y-Position (m)",
-    width=500, height=220,
+    width=350, height=220,
     align='left'
 )
 disp_curve = gcurve(graph=disp_graph, color=color.red, width=2)
@@ -383,7 +408,7 @@ disp_curve = gcurve(graph=disp_graph, color=color.red, width=2)
 energy_graph = graph(
     title="<b>System Energy</b>",
     xtitle="Time (s)", ytitle="Energy (J)",
-    width=500, height=220,
+    width=350, height=220,
     align='left'
 )
 ke_curve = gcurve(graph=energy_graph, color=color.blue, label="Kinetic E.")
@@ -394,7 +419,7 @@ te_curve = gcurve(graph=energy_graph, color=color.black, label="Total E.")
 stress_graph = graph(
     title="<b>Max Spring Stress  (0 = relaxed · 1 = breaking)</b>",
     xtitle="Time (s)", ytitle="Stress Fraction",
-    width=500, height=220,
+    width=375, height=220,
     ymin=0, ymax=1.1,
     align='left'
 )
@@ -404,7 +429,7 @@ stress_curve = gcurve(graph=stress_graph, color=color.orange, width=2, label="Ma
 force_graph = graph(
     title="<b>Plank Net Vertical Force</b>",
     xtitle="Plank index", ytitle="Net Fy (N)",
-    width=500, height=220,
+    width=350, height=220,
     xmin=-0.5, xmax=PLA_NUM-0.5,
     ymin=-2000, ymax=500,
     align='left'
@@ -503,7 +528,6 @@ t = 0
 dt = 0.01
 g = vec(0, -9.8, 0)
 
-
 while True:
     rate(100)
     t += dt
@@ -516,6 +540,14 @@ while True:
 
     for p in plank_list:
         p.net_force = vec(0, 0, 0)
+    
+    
+    # -------- Bridge collapse check --------
+    if any(s.broken for s in spring_list):
+        disp_label.text = f"The Bridge Collapsed! Max displacement: {plank_list[PLA_NUM//2].model.pos.y:.2f}m"
+        sleep()
+        continue
+
 
     # -------- Spring forces --------
     max_stress = 0.0
@@ -554,12 +586,6 @@ while True:
     for person in person_list:
         if person.model.pos.x >= BRIDGE_LEN/2 + 2*WALL_WIDTH*PPL_NUM - 10:
             ppl_moving = False
-            break
-
-        if person.model.pos.y <= -50:
-            scene.autoscale = False
-            sleep(3)
-            stop()
             break
 
         if ppl_moving:
@@ -626,6 +652,8 @@ while True:
             sys_pe_grav += PLA_MASS * 9.8 * p.model.pos.y
 
     for s in spring_list:
+        if s.broken:
+            continue
         stretch = mag(s.plankR.model.pos - s.plankL.model.pos) - s.rest_length
         sys_pe_spring += 0.5 * k_eff * stretch**2
 
@@ -638,13 +666,16 @@ while True:
     te_curve.plot(t, sys_energy_total)
 
     center_index = len(plank_list) // 2
-    disp_curve.plot(t, plank_list[center_index].model.pos.y)
 
     stress_curve.plot(t, max_stress)
 
-    force_curve.delete()
+    force_curve.data = []    
     for i, fy in enumerate(plank_force_magnitudes):
         force_curve.plot(i, fy)
+
+    center_y = plank_list[center_index].model.pos.y
+    disp_curve.plot(t, center_y)
+    disp_label.text = f"Center Displacement: {center_y:.2f} m"
 
     # -------- Heatmap --------
     update_heatmap()
