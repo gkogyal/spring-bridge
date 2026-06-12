@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 from vpython import *
 
-Web VPython 3.2
+#Web VPython 3.2
 
 #########################
 # CONSTANTS
@@ -177,7 +177,6 @@ WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_
 WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
-<<<<<<< HEAD
 # MODEL
 #########################
 
