@@ -127,8 +127,8 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Speed (m/s): ")
     ppl_speed_label = wtext(text=f'{PPL_SPEED:.1f}')
-    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n")
-    hmap_scene.append_to_caption(f"{hmap_widget_gap}# Planks: ")
+    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))    
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n{hmap_widget_gap}")
     pla_num_label = wtext(text=f'{PLA_NUM}')
     widget_list.append(slider(min=4, max=20, value=PLA_NUM, step=1, length=180, bind=set_pla_num))
 
@@ -482,7 +482,7 @@ def start():
     pe_curve.data = []
     te_curve.data = []
     stress_curve.data = []
-    force_curve.delete()
+    force_curve.data = []
 
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET\n', background=color.red, pos=scene.title_anchor)
@@ -544,20 +544,12 @@ while True:
     for p in plank_list:
         p.net_force = vec(0, 0, 0)
 
-    # -------- Bridge collapse check --------
-    if any(s.broken for s in spring_list):
-        disp_label.text = f"The Bridge Collapsed! Max displacement: {plank_list[PLA_NUM//2].model.pos.y:.2f}m"
-        sleep()
-        continue
-
-
     # -------- Spring forces --------
     max_stress = 0.0
     for s in spring_list:
         if s.broken:
             s.hide_all()
             continue
-
         spring_vec = s.plankR.model.pos - s.plankL.model.pos
         current_len = mag(spring_vec)
         spring_dir = norm(spring_vec) if current_len > 0 else vec(0, 0, 0)
@@ -609,16 +601,15 @@ while True:
         continue
 
     # -------- Plank dynamics --------
-    for p in plank_list:
+    for i, p in enumerate(plank_list):
         if not p.anchored:
             p.net_force += PLA_MASS * g
             p.net_force -= SPR_B * p.velocity
             p.velocity += (p.net_force / PLA_MASS) * dt
             p.model.pos += p.velocity * dt
-
-    # -------- Record per-plank Fy --------
-    for i, p in enumerate(plank_list):
-        plank_force_magnitudes[i] = p.net_force.y
+            plank_force_magnitudes[i] = p.net_force.y
+        else:
+            plank_force_magnitudes[i] = 0.0
 
     # -------- Plank rotation --------
     for i in range(len(plank_list)):
@@ -677,7 +668,13 @@ while True:
 
     center_y = plank_list[center_index].model.pos.y
     disp_curve.plot(t, center_y)
-    disp_label.text = f"Center Displacement: {center_y:.2f} m"
+    
+    if any(s.broken for s in spring_list):
+        disp_label.text = f"BRIDGE COLLAPSED! \n Center Displacement: {center_y:.2f} m"
+        if center_y < -40:
+            go = False
+    else:
+        disp_label.text = f"Center Displacement: {center_y:.2f} m"
 
     # -------- Heatmap --------
     update_heatmap()
