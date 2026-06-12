@@ -108,6 +108,7 @@ def set_spr_mat(m):
     SPR_MAT = m.index
 
 hmap_widget_gap = "  ||  "
+
 def create_widgets():
     global ppl_num_label, ppl_mass_label, ppl_speed_label
     global pla_num_label, spr_k_label, spr_num_label, spr_b_label
@@ -180,26 +181,29 @@ WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_W
 # MODEL
 #########################
 
-def create_model(start_pos):
-    return create_penguin_walker(start_pos)
+def penguin(start_pos, mass):
+    scale = sqrt(mass / 10.0)
 
-def create_penguin_walker(start_pos):
-
-    body = ellipsoid(pos=vec(0,0,0), size=vec(9,15,7), color=color.black)
-    belly = ellipsoid(pos=vec(0.5,-2,3), size=vec(7,13,5), color=color.white)
-    head = sphere(pos=vec(-1,7,1), radius=4.0, color=color.black)
-    eye_L = sphere(pos=vec(-2.5,8.5,3), radius=1.2, color=color.white)
-    pupil_L = sphere(pos=vec(-2.8,8.7,4), radius=0.5, color=color.black)
-    eye_R = sphere(pos=vec(0.5,7.5,3.5), radius=0.6, color=color.white)
-    pupil_R = sphere(pos=vec(0.5,7.3,4), radius=0.3, color=color.black)
-    beak = cone(pos=vec(-0.5,6.5,4), axis=vec(-1,-1,3), radius=1.5, color=color.orange)
-    flipper_L = ellipsoid(pos=vec(-5,1,0), size=vec(2,12,3), axis=vec(2,-1,1), color=color.black)
-    flipper_R = ellipsoid(pos=vec(4.5,-2,0), size=vec(1,7,5), axis=vec(0,-3,-1), color=color.black)
-    foot_L = ellipsoid(pos=vec(-3,-7.5,3), size=vec(4,3,4), color=color.orange)
-    foot_R = ellipsoid(pos=vec(3,-8.5,1), size=vec(2,1,7), color=color.orange)
-    penguin_model = compound([body,belly,head,eye_L,pupil_L,eye_R,pupil_R,beak,flipper_L,flipper_R,foot_L,foot_R], pos=start_pos)
-    penguin_model.size = PPL_DIM
-
+    body = ellipsoid(pos=vec(0,0,0), size=vec(8*scale, 16, 8*scale), color=color.black)
+    belly = ellipsoid(pos=vec(0,-1,3*scale), size=vec(6*scale, 14, 5*scale), color=color.white)
+    head = sphere(pos=vec(0,8,0), radius=3.5, color=color.black)
+    
+    eye_L = sphere(pos=vec(-1.2*scale, 9, 2.5*scale), radius=0.8, color=color.white)
+    pupil_L = sphere(pos=vec(-1.2*scale, 9, 3.0*scale), radius=0.4, color=color.black)
+    eye_R = sphere(pos=vec(1.2*scale, 9, 2.5*scale), radius=0.8, color=color.white)
+    pupil_R = sphere(pos=vec(1.2*scale, 9, 3.0*scale), radius=0.4, color=color.black)
+    beak = cone(pos=vec(0, 7.5, 3*scale), axis=vec(0,0,3), radius=1.0, color=color.orange)
+    
+    flipper_L = ellipsoid(pos=vec(-4.5*scale, 0, 0), size=vec(1.5, 10, 4), axis=vec(1,-3,0), color=color.black)
+    flipper_R = ellipsoid(pos=vec(4.5*scale, 0, 0), size=vec(1.5, 10, 4), axis=vec(-1,-3,0), color=color.black)
+    foot_L = ellipsoid(pos=vec(-2*scale, -8, 2*scale), size=vec(3*scale, 1.5, 5), color=color.orange)
+    foot_R = ellipsoid(pos=vec(2*scale, -8, 2*scale), size=vec(3*scale, 1.5, 5), color=color.orange)
+    
+    penguin_parts = [body, belly, head, eye_L, pupil_L, eye_R, pupil_R, beak, flipper_L, flipper_R, foot_L, foot_R]
+    penguin_model = compound(penguin_parts, pos=start_pos)
+    
+    penguin_model.size = vec(PPL_DIM.x*scale, PPL_DIM.y, PPL_DIM.z*scale)
+    
     return penguin_model
 
 #########################
@@ -211,7 +215,7 @@ PPL_DIM = vec(10, 20, 10)
 
 class Person:
     def __init__(self, start_pos):
-        self.model = create_model(start_pos)
+        self.model = penguin(start_pos, PPL_MASS)
 
 def init_people():
     global person_list
