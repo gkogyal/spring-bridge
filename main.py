@@ -198,7 +198,7 @@ def penguin(start_pos, mass):
 
     parts = [body, belly, head, eye_L, pupil_L, eye_R, pupil_R, beak, flipper_L, flipper_R, foot_L, foot_R]
     penguin_model = compound(parts, pos=start_pos)
-
+    
     return penguin_model
 
 #########################
@@ -664,7 +664,7 @@ while True:
 
     center_y = plank_list[center_index].model.pos.y
     disp_curve.plot(t, center_y)
-   
+
     if any(s.broken for s in spring_list):
         disp_label.text = f"BRIDGE COLLAPSED! \n Center Displacement: {center_y:.2f} m"
         if center_y < -40:
