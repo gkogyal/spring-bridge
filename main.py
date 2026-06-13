@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 from vpython import *
 
-Web VPython 3.2
+#Web VPython 3.2
 
 #########################
 # CONSTANTS
@@ -108,6 +108,7 @@ def set_spr_mat(m):
     SPR_MAT = m.index
 
 hmap_widget_gap = "  ||  "
+
 def create_widgets():
     global ppl_num_label, ppl_mass_label, ppl_speed_label
     global pla_num_label, spr_k_label, spr_num_label, spr_b_label
@@ -126,8 +127,8 @@ def create_widgets():
 
     hmap_scene.append_to_caption(f"\n{hmap_widget_gap}Speed (m/s): ")
     ppl_speed_label = wtext(text=f'{PPL_SPEED:.1f}')
-    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n")
-    hmap_scene.append_to_caption(f"{hmap_widget_gap}# Planks: ")
+    widget_list.append(slider(min=1, max=20, value=PPL_SPEED, step=0.5, length=180, bind=set_ppl_speed))    
+    hmap_scene.append_to_caption(f"\n{hmap_widget_gap}\n{hmap_widget_gap}<b>--- Planks ---</b>\n{hmap_widget_gap}")
     pla_num_label = wtext(text=f'{PLA_NUM}')
     widget_list.append(slider(min=4, max=20, value=PLA_NUM, step=1, length=180, bind=set_pla_num))
 
@@ -176,29 +177,27 @@ WALL_L = box(pos=vec(-BRIDGE_LEN/2 - WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_
 WALL_R = box(pos=vec(BRIDGE_LEN/2 + WALL_WIDTH*PPL_NUM, -25, 0), size=vec(WALL_WIDTH*2*PPL_NUM, 50, 100))
 
 #########################
-<<<<<<< HEAD
 # MODEL
 #########################
 
-def create_model(start_pos):
-    return create_penguin_walker(start_pos)
+def penguin(start_pos, mass):
+    scale = sqrt(mass / 10.0)
 
-def create_penguin_walker(start_pos):
+    body = ellipsoid(pos=vec(0,0,0), size=vec(8*scale, 16, 8*scale), color=color.black)
+    belly = ellipsoid(pos=vec(0,-1,3*scale), size=vec(6*scale, 14, 5*scale), color=color.white)
+    head = sphere(pos=vec(0,8,0), radius=3.5, color=color.black)
+    eye_L = sphere(pos=vec(-1.2, 9, 2.5), radius=0.8, color=color.white)
+    pupil_L = sphere(pos=vec(-1.2, 9, 3.0), radius=0.4, color=color.black)
+    eye_R = sphere(pos=vec(1.2, 9, 2.5), radius=0.8, color=color.white)
+    pupil_R = sphere(pos=vec(1.2, 9, 3.0), radius=0.4, color=color.black)
+    beak = cone(pos=vec(0, 7.5, 3.0), axis=vec(0,0,3), radius=1.0, color=color.orange)
+    flipper_L = ellipsoid(pos=vec(-4.5*scale, 0, 0), size=vec(1.5, 10, 4), axis=vec(1,-3,0), color=color.black)
+    flipper_R = ellipsoid(pos=vec(4.5*scale, 0, 0), size=vec(1.5, 10, 4), axis=vec(-1,-3,0), color=color.black)
+    foot_L = ellipsoid(pos=vec(-2*scale, -8, 2*scale), size=vec(3*scale, 1.5, 5), color=color.orange)
+    foot_R = ellipsoid(pos=vec(2*scale, -8, 2*scale), size=vec(3*scale, 1.5, 5), color=color.orange)
 
-    body = ellipsoid(pos=vec(0,0,0), size=vec(9,15,7), color=color.black)
-    belly = ellipsoid(pos=vec(0.5,-2,3), size=vec(7,13,5), color=color.white)
-    head = sphere(pos=vec(-1,7,1), radius=4.0, color=color.black)
-    eye_L = sphere(pos=vec(-2.5,8.5,3), radius=1.2, color=color.white)
-    pupil_L = sphere(pos=vec(-2.8,8.7,4), radius=0.5, color=color.black)
-    eye_R = sphere(pos=vec(0.5,7.5,3.5), radius=0.6, color=color.white)
-    pupil_R = sphere(pos=vec(0.5,7.3,4), radius=0.3, color=color.black)
-    beak = cone(pos=vec(-0.5,6.5,4), axis=vec(-1,-1,3), radius=1.5, color=color.orange)
-    flipper_L = ellipsoid(pos=vec(-5,1,0), size=vec(2,12,3), axis=vec(2,-1,1), color=color.black)
-    flipper_R = ellipsoid(pos=vec(4.5,-2,0), size=vec(1,7,5), axis=vec(0,-3,-1), color=color.black)
-    foot_L = ellipsoid(pos=vec(-3,-7.5,3), size=vec(4,3,4), color=color.orange)
-    foot_R = ellipsoid(pos=vec(3,-8.5,1), size=vec(2,1,7), color=color.orange)
-    penguin_model = compound([body,belly,head,eye_L,pupil_L,eye_R,pupil_R,beak,flipper_L,flipper_R,foot_L,foot_R], pos=start_pos)
-    penguin_model.size = PPL_DIM
+    parts = [body, belly, head, eye_L, pupil_L, eye_R, pupil_R, beak, flipper_L, flipper_R, foot_L, foot_R]
+    penguin_model = compound(parts, pos=start_pos)
 
     return penguin_model
 
@@ -211,7 +210,7 @@ PPL_DIM = vec(10, 20, 10)
 
 class Person:
     def __init__(self, start_pos):
-        self.model = create_model(start_pos)
+        self.model = penguin(start_pos, PPL_MASS)
 
 def init_people():
     global person_list
@@ -479,7 +478,7 @@ def start():
     pe_curve.data = []
     te_curve.data = []
     stress_curve.data = []
-    force_curve.delete()
+    force_curve.data = []
 
     BUTTON_MAIN.delete()
     BUTTON_MAIN = button(bind=stop, text='RESET\n', background=color.red, pos=scene.title_anchor)
@@ -541,20 +540,12 @@ while True:
     for p in plank_list:
         p.net_force = vec(0, 0, 0)
 
-    # -------- Bridge collapse check --------
-    if any(s.broken for s in spring_list):
-        disp_label.text = f"The Bridge Collapsed! Max displacement: {plank_list[PLA_NUM//2].model.pos.y:.2f}m"
-        sleep()
-        continue
-
-
     # -------- Spring forces --------
     max_stress = 0.0
     for s in spring_list:
         if s.broken:
             s.hide_all()
             continue
-
         spring_vec = s.plankR.model.pos - s.plankL.model.pos
         current_len = mag(spring_vec)
         spring_dir = norm(spring_vec) if current_len > 0 else vec(0, 0, 0)
@@ -606,16 +597,15 @@ while True:
         continue
 
     # -------- Plank dynamics --------
-    for p in plank_list:
+    for i, p in enumerate(plank_list):
         if not p.anchored:
             p.net_force += PLA_MASS * g
             p.net_force -= SPR_B * p.velocity
             p.velocity += (p.net_force / PLA_MASS) * dt
             p.model.pos += p.velocity * dt
-
-    # -------- Record per-plank Fy --------
-    for i, p in enumerate(plank_list):
-        plank_force_magnitudes[i] = p.net_force.y
+            plank_force_magnitudes[i] = p.net_force.y
+        else:
+            plank_force_magnitudes[i] = 0.0
 
     # -------- Plank rotation --------
     for i in range(len(plank_list)):
@@ -674,7 +664,13 @@ while True:
 
     center_y = plank_list[center_index].model.pos.y
     disp_curve.plot(t, center_y)
-    disp_label.text = f"Center Displacement: {center_y:.2f} m"
+   
+    if any(s.broken for s in spring_list):
+        disp_label.text = f"BRIDGE COLLAPSED! \n Center Displacement: {center_y:.2f} m"
+        if center_y < -40:
+            go = False
+    else:
+        disp_label.text = f"Center Displacement: {center_y:.2f} m"
 
     # -------- Heatmap --------
     update_heatmap()
